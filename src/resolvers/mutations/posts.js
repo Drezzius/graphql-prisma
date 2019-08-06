@@ -1,90 +1,56 @@
 import uuid from 'uuid/v4';
 
-const createPost = (parent, { data }, { db, pubsub }, info) => {
-  const existingUser = db.users.some(user => user.id === data.author);
-  if (!existingUser) {
-    throw new Error("User doesn't exist.");
+const createPost = async (parent, { data }, { prisma, pubsub }, info) => {
+  const userExists = await prisma.exists.User({ id: data.author });
+  if (!userExists) {
+    throw new Error('User not found');
   }
 
-  const newPost = {
-    id: uuid(),
-    ...data
-  };
-
-  db.posts.push(newPost);
-
-  if (newPost.published) {
-    pubsub.publish(`post`, {
-      post: {
-        mutation: 'CREATED',
-        data: newPost
-      }
-    });
-  }
-
-  return newPost;
-};
-const deletePost = (parent, { id }, { db, pubsub }, info) => {
-  const postId = db.posts.findIndex(post => post.id === id);
-  if (postId === -1) {
-    throw new Error("Post doesn't exist.");
-  }
-
-  const [deletedPost] = db.posts.splice(postId, 1);
-
-  db.comments = db.comments.filter(comment => comment.post !== id);
-
-  if (deletedPost.published) {
-    pubsub.publish('post', {
-      post: {
-        mutation: 'DELETED',
-        data: deletedPost
-      }
-    });
-  }
-
-  return deletedPost;
-};
-const updatePost = (parent, { id, data }, { db, pubsub }, info) => {
-  const post = db.posts.find(post => post.id === id);
-  const originalPost = { ...post };
-  if (!post) {
-    throw new Error("Post doesn't exist");
-  }
-  if (typeof data.title === 'string') {
-    post.title = data.title;
-  }
-  if (typeof data.body === 'string') {
-    post.body = data.body;
-  }
-  if (typeof data.published === 'boolean') {
-    post.published = data.published;
-
-    if (originalPost.published && !post.published) {
-      pubsub.publish('post', {
-        post: {
-          mutation: 'DELETED',
-          data: originalPost
+  return prisma.mutation.createPost(
+    {
+      data: {
+        title: data.title,
+        body: data.body,
+        published: data.published,
+        author: {
+          connect: {
+            id: data.author
+          }
         }
-      });
-    } else if (!originalPost.published && post.published) {
-      pubsub.publish('post', {
-        post: {
-          mutation: 'CREATED',
-          data: post
-        }
-      });
-    }
-  } else if (post.published) {
-    pubsub.publish('post', {
-      post: {
-        mutation: 'UPDATED',
-        data: post
       }
-    });
+    },
+    info
+  );
+};
+
+const deletePost = async (parent, { id }, { prisma, pubsub }, info) => {
+  const postExists = await prisma.exists.Post({ id });
+  if (!postExists) {
+    throw new Error('Post not found');
   }
 
-  return post;
+  return prisma.mutation.deletePost(
+    {
+      where: {
+        id
+      }
+    },
+    info
+  );
+};
+
+const updatePost = async (parent, { id, data }, { prisma, pubsub }, info) => {
+  const postExists = await prisma.exists.Post({ id });
+  if (!postExists) {
+    throw new Error('Post not found');
+  }
+
+  return prisma.mutation.updatePost({
+    where: {
+      id
+    },
+    data
+  });
 };
 
 export { createPost, deletePost, updatePost };
