@@ -1,27 +1,40 @@
 const Query = {
-  users(parent, { query }, { db }, info) {
-    if (!query) {
-      return db.users;
-    } else {
-      return db.users.filter(user =>
-        user.name.toLowerCase().includes(query.toLowerCase())
-      );
+  users(parent, { query }, { prisma }, info) {
+    const opArgs = {};
+
+    if (query) {
+      opArgs.where = {
+        OR: [
+          {
+            name_contains: query
+          },
+          {
+            email_contains: query
+          }
+        ]
+      };
     }
+
+    return prisma.query.users(opArgs, info);
   },
-  posts(parent, { query }, { db }, info) {
-    if (!query) {
-      return db.posts;
-    } else {
-      return db.posts.filter(post => {
-        return (
-          post.title.toLowerCase().includes(query.toLowerCase()) ||
-          post.body.toLowerCase().includes(query.toLowerCase())
-        );
-      });
+  posts(parent, { query }, { prisma }, info) {
+    const opArgs = {};
+    if (query) {
+      opArgs.where = {
+        OR: [
+          {
+            title_contains: query
+          },
+          {
+            body_contains: query
+          }
+        ]
+      };
     }
+    return prisma.query.posts(opArgs, info);
   },
-  comments(parent, args, { db }, info) {
-    return db.comments;
+  comments(parent, args, { prisma }, info) {
+    return prisma.query.comments(null, info);
   },
   me() {
     return {
