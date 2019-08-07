@@ -1,6 +1,7 @@
-import uuid from 'uuid/v4';
+import getUserId from '../../utils/getUserId';
 
-const createPost = async (parent, { data }, { prisma, pubsub }, info) => {
+const createPost = async (parent, { data }, { prisma, req }, info) => {
+  const userId = getUserId(req);
   const userExists = await prisma.exists.User({ id: data.author });
   if (!userExists) {
     throw new Error('User not found');
@@ -14,7 +15,7 @@ const createPost = async (parent, { data }, { prisma, pubsub }, info) => {
         published: data.published,
         author: {
           connect: {
-            id: data.author
+            id: userId
           }
         }
       }
@@ -23,10 +24,16 @@ const createPost = async (parent, { data }, { prisma, pubsub }, info) => {
   );
 };
 
-const deletePost = async (parent, { id }, { prisma, pubsub }, info) => {
-  const postExists = await prisma.exists.Post({ id });
+const deletePost = async (parent, { id }, { prisma, req }, info) => {
+  const userId = getUserId(req);
+  const postExists = await prisma.exists.Post({
+    id,
+    author: {
+      id: userId
+    }
+  });
   if (!postExists) {
-    throw new Error('Post not found');
+    throw new Error('Unable to delete post');
   }
 
   return prisma.mutation.deletePost(
@@ -39,18 +46,28 @@ const deletePost = async (parent, { id }, { prisma, pubsub }, info) => {
   );
 };
 
-const updatePost = async (parent, { id, data }, { prisma, pubsub }, info) => {
-  const postExists = await prisma.exists.Post({ id });
+const updatePost = async (parent, { id, data }, { prisma, req }, info) => {
+  const userId = getUserId(req);
+  const postExists = await prisma.exists.Post({
+    id,
+    author: {
+      id: userId
+    }
+  });
+
   if (!postExists) {
-    throw new Error('Post not found');
+    throw new Error('Unable to update post');
   }
 
-  return prisma.mutation.updatePost({
-    where: {
-      id
+  return prisma.mutation.updatePost(
+    {
+      where: {
+        id
+      },
+      data
     },
-    data
-  });
+    info
+  );
 };
 
 export { createPost, deletePost, updatePost };

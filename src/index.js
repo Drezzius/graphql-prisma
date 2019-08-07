@@ -10,10 +10,13 @@ const server = new GraphQLServer({
   resolvers: {
     ...ResolversBundle
   },
-  context: {
-    db,
-    pubsub,
-    prisma
+  context(req) {
+    return {
+      db,
+      pubsub,
+      prisma,
+      req
+    };
   }
 });
 

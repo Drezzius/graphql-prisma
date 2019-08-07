@@ -1,4 +1,8 @@
-const createComment = async (parent, { data }, { prisma }, info) => {
+import getUserId from '../../utils/getUserId';
+
+const createComment = async (parent, { data }, { prisma, req }, info) => {
+  const userId = getUserId(req);
+
   return prisma.mutation.createComment(
     {
       data: {
@@ -10,7 +14,7 @@ const createComment = async (parent, { data }, { prisma }, info) => {
         },
         author: {
           connect: {
-            id: data.author
+            id: userId
           }
         }
       }
@@ -19,10 +23,16 @@ const createComment = async (parent, { data }, { prisma }, info) => {
   );
 };
 
-const deleteComment = async (parent, { id }, { prisma }, info) => {
-  const commentExists = await prisma.exists.Comment({ id });
+const deleteComment = async (parent, { id }, { prisma, req }, info) => {
+  const userId = getUserId(req);
+  const commentExists = await prisma.exists.Comment({
+    id,
+    author: {
+      id: userId
+    }
+  });
   if (!commentExists) {
-    throw new Error('Comment not found');
+    throw new Error('Unable to delete comment');
   }
 
   return prisma.mutation.deleteComment(
@@ -35,10 +45,16 @@ const deleteComment = async (parent, { id }, { prisma }, info) => {
   );
 };
 
-const updateComment = async (parent, { id, data }, { prisma }, info) => {
-  const commentExists = await prisma.exists.Comment({ id });
+const updateComment = async (parent, { id, data }, { prisma, req }, info) => {
+  const userId = getUserId(req);
+  const commentExists = await prisma.exists.Comment({
+    id,
+    author: {
+      id: userId
+    }
+  });
   if (!commentExists) {
-    throw new Error('Comment not found');
+    throw new Error('Unable to update comment');
   }
 
   return prisma.mutation.updateComment(
