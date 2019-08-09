@@ -1,8 +1,6 @@
 node_modules
-.graphqlconfig
 
-prisma/docker-compose.yml
-prisma/prisma.yml
 prisma-review-website
+config
+dist
 
-config.js
