@@ -1,11 +1,12 @@
 import getUserId from '../utils/getUserId';
 
 const Query = {
-  users(parent, { query, first, skip, after }, { prisma }, info) {
+  users(parent, { query, first, skip, after, orderBy }, { prisma }, info) {
     const opArgs = {
       first,
       skip,
-      after
+      after,
+      orderBy
     };
 
     if (query) {
@@ -20,12 +21,18 @@ const Query = {
 
     return prisma.query.users(opArgs, info);
   },
-  async myPosts(parent, { query, first, skip, after }, { prisma, req }, info) {
+  async myPosts(
+    parent,
+    { query, first, skip, after, orderBy },
+    { prisma, req },
+    info
+  ) {
     const userId = getUserId(req, true);
     const opArgs = {
       first,
       skip,
       after,
+      orderBy,
       where: {
         author: {
           id: userId
@@ -44,11 +51,12 @@ const Query = {
     }
     return await prisma.query.posts(opArgs, info);
   },
-  posts(parent, { query, first, skip, after }, { prisma }, info) {
+  posts(parent, { query, first, skip, after, orderBy }, { prisma }, info) {
     const opArgs = {
       first,
       skip,
       after,
+      orderBy,
       where: {
         published: true
       }
@@ -65,12 +73,13 @@ const Query = {
     }
     return prisma.query.posts(opArgs, info);
   },
-  comments(parent, { first, skip, after }, { prisma }, info) {
+  comments(parent, { first, skip, after, orderBy }, { prisma }, info) {
     return prisma.query.comments(
       {
         first,
         skip,
-        after
+        after,
+        orderBy
       },
       info
     );
