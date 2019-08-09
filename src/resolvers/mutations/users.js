@@ -1,17 +1,6 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { jwtsecret } from '../../config';
 import getUserId from '../../utils/getUserId';
-
-const dummy = async () => {
-  const email = 'peter@example.com';
-  const password = 'bindi123';
-
-  const hashedPassword =
-    '$2a$10$ESkxmDq3JxmPNhmV8wFbd.3Tw4.9AD8dR2PPBeJ7crAm0DGIVqmda';
-  const isMatch = await bcrypt.compare(password, hashedPassword);
-  console.log(isMatch);
-};
+import generateJWT from '../../utils/generateJWT';
 
 const loginUser = async (parent, { data }, { prisma }, info) => {
   console.log(data);
@@ -32,7 +21,7 @@ const loginUser = async (parent, { data }, { prisma }, info) => {
 
   return {
     user,
-    token: jwt.sign({ userId: user.id }, jwtsecret)
+    token: generateJWT(user.id)
   };
 };
 
@@ -55,7 +44,7 @@ const createUser = async (parent, { data }, { prisma }, info) => {
   });
   return {
     user,
-    token: jwt.sign({ userId: user.id }, jwtsecret)
+    token: generateJWT(user.id)
   };
 };
 
