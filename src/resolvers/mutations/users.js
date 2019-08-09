@@ -4,7 +4,6 @@ import generateJWT from '../../utils/generateJWT';
 import hashPassword from '../../utils/hashPassword';
 
 const loginUser = async (parent, { data }, { prisma }, info) => {
-  console.log(data);
   const user = await prisma.query.user({
     where: {
       email: data.email
