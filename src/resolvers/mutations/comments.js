@@ -2,25 +2,32 @@ import getUserId from '../../utils/getUserId';
 
 const createComment = async (parent, { data }, { prisma, req }, info) => {
   const userId = getUserId(req);
-
-  return prisma.mutation.createComment(
-    {
-      data: {
-        body: data.body,
-        post: {
-          connect: {
-            id: data.post
-          }
-        },
-        author: {
-          connect: {
-            id: userId
+  const post = await prisma.exists.Post({
+    id: data.post,
+    published: true
+  });
+  if (post.published === false) {
+    throw new Error('Post not found');
+  }
+  if (data.post)
+    return prisma.mutation.createComment(
+      {
+        data: {
+          body: data.body,
+          post: {
+            connect: {
+              id: data.post
+            }
+          },
+          author: {
+            connect: {
+              id: userId
+            }
           }
         }
-      }
-    },
-    info
-  );
+      },
+      info
+    );
 };
 
 const deleteComment = async (parent, { id }, { prisma, req }, info) => {

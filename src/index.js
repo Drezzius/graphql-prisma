@@ -1,6 +1,9 @@
 import { GraphQLServer, PubSub } from 'graphql-yoga';
 import db from './db';
-import ResolversBundle from './resolvers/ResolversBundle';
+import {
+  ResolversBundle,
+  fragmentReplacements
+} from './resolvers/ResolversBundle';
 import prisma from './prisma';
 
 const pubsub = new PubSub();
@@ -17,7 +20,8 @@ const server = new GraphQLServer({
       prisma,
       req
     };
-  }
+  },
+  fragmentReplacements
 });
 
 server.start(() => {
