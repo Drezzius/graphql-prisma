@@ -1,6 +1,7 @@
 node_modules
 
 prisma-review-website
+prisma/docker-compose.yml
 config
 dist
 
